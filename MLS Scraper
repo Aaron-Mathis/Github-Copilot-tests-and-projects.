@@ -1,0 +1,153 @@
+#This program scrapes wikipedia for the results of past Major League Soccer seasons and then compiles them into a csv file
+#The csv file is then used to create a graph of the results of each season
+#The graph is then saved as a png file
+#The program is run from the command line with the following command: python3 mls.py
+
+import requests
+from bs4 import BeautifulSoup
+import csv
+import matplotlib.pyplot as plt
+
+#This function scrapes the wikipedia page for the results of each season    
+def scrape():
+    #This is the url of the wikipedia page
+    url = 'https://en.wikipedia.org/wiki/List_of_Major_League_Soccer_seasons'
+    #This is the request to get the page
+    r = requests.get(url)
+    #This is the soup object of the page
+    soup = BeautifulSoup(r.text, 'html.parser')
+    #This is the table on the page that contains the results of each season
+    table = soup.find('table', {'class': 'wikitable sortable'})
+    #This is the list of all the rows in the table
+    rows = table.find_all('tr')
+    #This is the list of all the seasons
+    seasons = []
+    #This is the list of all the winners of each season
+    winners = []
+    #This is the list of all the runners up of each season
+    runnersUp = []
+    #This is the list of all the third place teams of each season
+    thirdPlace = []
+  
+    #This loop goes through each row in the table and gets the season, winner, runner up, and third place team
+    for row in rows:
+        #This is the list of all the cells in the row
+        cells = row.find_all('td')
+        #This is the list of all the headers in the row
+        headers = row.find_all('th')
+        #This checks if the row is a header row
+        if len(headers) > 0:
+            #This checks if the header row is the header row for the table
+            if headers[0].text == 'Season':
+                #This skips the header row
+                continue
+            #This gets the season
+            season = headers[0].text
+            #This gets the winner
+            winner = cells[0].text
+            #This gets the runner up
+            runnerUp = cells[1].text
+            #This gets the third place team
+            third = cells[2].text
+            #This adds the season to the list of seasons
+            seasons.append(season)
+            #This adds the winner to the list of winners
+            winners.append(winner)
+            #This adds the runner up to the list of runners up
+            runnersUp.append(runnerUp)
+            #This adds the third place team to the list of third place teams
+            thirdPlace.append(third)
+    #This returns the list of seasons, winners, runners up, and third place teams
+    return seasons, winners, runnersUp, thirdPlace
+
+#This function writes the results of each season to a csv file
+def write(seasons, winners, runnersUp, thirdPlace):
+    #This opens the csv file
+    with open('mls.csv', 'w', newline='') as csvfile:
+        #This creates the csv writer object
+        writer = csv.writer(csvfile)
+        #This writes the header row
+        writer.writerow(['Season', 'Winner', 'Runner Up', 'Third Place'])
+        #This loops through each season
+        for i in range(len(seasons)):
+            #This writes the season, winner, runner up, and third place team to the csv file
+            writer.writerow([seasons[i], winners[i], runnersUp[i], thirdPlace[i]])
+
+#This function creates a graph of the results of each season
+def graph(seasons, winners, runnersUp, thirdPlace):
+    #This is the list of all the years
+    years = []
+    #This is the list of all the winners
+    winnersList = []
+    #This is the list of all the runners up
+    runnersUpList = []
+    #This is the list of all the third place teams
+    thirdPlaceList = []
+    #This loops through each season
+    for season in seasons:
+        #This splits the season into the start and end years
+        year = season.split('-')
+        #This gets the start year
+        startYear = year[0]
+        #This gets the end year
+        endYear = year[1]
+        #This adds the start year to the list of years
+        years.append(startYear)
+        #This adds the end year to the list of years
+        years.append(endYear)
+    #This loops through each winner
+    for winner in winners:
+        #This splits the winner into the team and the number of wins
+        win = winner.split(' (')
+        #This gets the team
+        team = win[0]
+        #This adds the team to the list of winners
+        winnersList.append(team)
+    #This loops through each runner up
+    for runnerUp in runnersUp:
+        #This splits the runner up into the team and the number of wins
+        run = runnerUp.split(' (')
+        #This gets the team
+        team = run[0]
+        #This adds the team to the list of runners up
+        runnersUpList.append(team)
+    #This loops through each third place team
+    for third in thirdPlace:
+        #This splits the third place team into the team and the number of wins
+        third = third.split(' (')
+        #This gets the team
+        team = third[0]
+        #This adds the team to the list of third place teams
+        thirdPlaceList.append(team)
+    #This creates the graph
+    plt.plot(years, winnersList, label='Winner')
+    plt.plot(years, runnersUpList, label='Runner Up')
+    plt.plot(years, thirdPlaceList, label='Third Place')
+    #This sets the x axis label
+    plt.xlabel('Year')
+    #This sets the y axis label
+    plt.ylabel('Team')
+    #This sets the title of the graph
+    plt.title('Major League Soccer Results')
+    #This sets the legend of the graph
+    plt.legend()
+    #This saves the graph as a png file
+    plt.savefig('mls.png')
+
+#This is the main function
+def main():
+    #This calls the scrape function
+    seasons, winners, runnersUp, thirdPlace = scrape()
+    #This calls the write function
+    write(seasons, winners, runnersUp, thirdPlace)
+    #This calls the graph function
+    graph(seasons, winners, runnersUp, thirdPlace)  
+
+#This calls the main function
+main()
+
+            
+
+
+   
+
